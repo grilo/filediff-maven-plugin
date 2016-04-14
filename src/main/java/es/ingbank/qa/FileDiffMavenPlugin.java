@@ -36,57 +36,67 @@ import java.util.List;
 @Mojo(name = "diff", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class FileDiffMavenPlugin extends AbstractMojo {
 
-	@Parameter(property = "oldFile", required = true)
-	private String oldFile;
+	@Parameter(property = "original", required = true)
+	private String original;
 
-	@Parameter(property = "newFile", required = true)
-	private String newFile;
+	@Parameter(property = "files", required = true)
+	private String[] files;
 
 	@Parameter(property = "showDiff", defaultValue = "true", required = false)
 	private String showDiff;
 
 	@Parameter(property = "abortOnDiff", defaultValue = "true", required = false)
 	private String abortOnDiff;
-	
+
 	private Log log = getLog();
+	private int diffCount = 0;
 
 	public void execute() throws MojoExecutionException {
-		
+
 		// Sanity Check
-		if (!new File(oldFile).canRead()) {
-			log.error(
-					"Unable to read old file. Ensure the path is correct and has enough permissions to be read.");
+		if (!new File(original).canRead()) {
+			log.error("Unable to read old file. Ensure the path is correct and has enough permissions to be read.");
 			System.exit(1);
 		}
+		log.info(" (original) " + original);
 
-		if (!new File(newFile).canRead()) {
-			log.error(
-					"Unable to read new file. Ensure the path is correct and has enough permissions to be read.");
-			System.exit(1);
-		}
-		
-		log.info("Old: " + oldFile);
-		log.info("New: " + newFile);
+		for (String f : files) {
 
-		// Load and parse the data
-		List<String> originalLines = fileToLines(oldFile);
-		List<String> newLines = fileToLines(newFile);
-
-		Patch<String> p = DiffUtils.diff(originalLines, newLines);
-		List<String> differences = DiffUtils.generateUnifiedDiff(oldFile, newFile, originalLines, p, 3);
-		
-		if (Boolean.valueOf(showDiff)) {
-			log.info("unified diff below:");
-			for (String line : differences) {
-				log.info(line);
+			if (!new File(f).canRead()) {
+				log.error("Unable to read new file. Ensure the path is correct and has enough permissions to be read.");
+				System.exit(1);
 			}
 		}
 
-		if (Boolean.valueOf(abortOnDiff) && differences.size() > 0) {
-			log.error("Differences found. Aborting...");
+		// Load and parse the data
+		List<String> originalLines = fileToLines(original);
+
+		for (String f : files) {
+			List<String> lines = fileToLines(f);
+			Patch<String> p = DiffUtils.diff(originalLines, lines);
+			List<String> differences = DiffUtils.generateUnifiedDiff(original, f, originalLines, p, 3);
+
+			if (differences.size() > 0) {
+				log.info(" (different) " + f);
+				if (Boolean.valueOf(showDiff)) {
+					for (String line : differences) {
+						System.out.println(line);
+					}
+				}
+			} else {
+				log.info(" (identical) " + f);
+			}
+
+			if (differences.size() > 0) {
+				diffCount += 1;
+			}
+		}
+		log.warn("Differences found in (" + diffCount + ") files.");
+
+		if (Boolean.valueOf(abortOnDiff) && diffCount > 0) {
+			log.error("Aborting...");
 			System.exit(1);
 		}
-
 	}
 
 	public List<String> fileToLines(String f) {

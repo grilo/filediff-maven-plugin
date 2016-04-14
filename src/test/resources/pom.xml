@@ -13,8 +13,15 @@
 				<artifactId>filediff-maven-plugin</artifactId>
 				<version>1.0-SNAPSHOT</version>
 				<configuration>
-                    <oldFile>original.java</oldFile>
-                    <newFile>new.java</newFile>
+                    <original>original.java</original>
+                    <files>
+                        <param>diff1.java</param>
+                        <param>nodiff1.java</param>
+                        <param>diff2.java</param>
+                        <param>diff3.java</param>
+                        <param>nodiff2.java</param>
+                        <param>nodiff3.java</param>
+                    </files>
                     <showDiff>true</showDiff>
                     <abortOnDiff>true</abortOnDiff>
 				</configuration>
