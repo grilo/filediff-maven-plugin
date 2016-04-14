@@ -2,6 +2,8 @@
 
 I haven't published it in any public repository, but feel free to use it all the same.
 
+Attaches itself to the validate stage (before compiling).
+
 Example usage:
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
